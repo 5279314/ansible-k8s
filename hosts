@@ -11,15 +11,9 @@
 10.1.1.130 etcd_name=etcd-2
 10.1.1.120 etcd_name=etcd-3
 
-[lb]
-# 如果部署单Master，该项忽略
-10.1.1.100 lb_name=lb-master
-10.1.1.110 lb_name=lb-backup
-
-
 [k8s:children]
 master
 node
 
 [newnode]
-#192.168.31.74 node_name=k8s-node3
+#10.1.1.140 node_name=k8s-node3
