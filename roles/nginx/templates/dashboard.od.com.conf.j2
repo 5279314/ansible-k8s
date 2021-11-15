@@ -1,0 +1,20 @@
+server {
+    listen       80;
+    server_name  dashboard.od.com;
+    rewrite ^(.*)$ https://${server_name}$1 permanent;
+}
+server {
+    listen       443 ssl;
+    server_name  dashboard.od.com;
+    ssl_certificate "certs/dashboard.od.com.crt";
+    ssl_certificate_key "certs/dashboard.od.com.key";
+    ssl_session_cache shared:SSL:1m;
+    ssl_session_timeout  10m;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    location / {
+        proxy_pass http://default_backend_traefik;
+	      proxy_set_header Host       $http_host;
+        proxy_set_header x-forwarded-for $proxy_add_x_forwarded_for;
+    }
+}

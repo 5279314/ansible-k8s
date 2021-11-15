@@ -1,0 +1,42 @@
+# 安装目录 
+software_dir: '/server/tools'
+k8s_work_dir: '/opt/kubernetes'
+etcd_work_dir: '/opt/etcd'
+tmp_dir: '/tmp/k8s'
+
+# 集群网络
+service_cidr: '192.168.0.0/16'
+localhost_dns: '10.1.1.2'
+cluster_dns: '192.168.0.2'   # 与roles/addons/files/coredns.yaml中IP一致，并且是service_cidr中的IP
+pod_cidr: "172.7.0.0/16" # 与roles/addons/files/calico.yaml中网段一致
+service_nodeport_range: '30000-32767'
+cluster_domain: 'cluster.local'
+
+# 高可用，如果部署单Master，该项忽略
+vip: '10.1.1.50'
+nic: 'eth0'  # 修改为实际内网网卡名
+
+# 自签证书可信任IP列表，为方便扩展，可添加多个预留IP
+cert_hosts:
+  # 包含所有LB、VIP、Master IP和service_cidr的第一个IP
+  k8s:
+    - 127.0.0.1
+    - 192.168.0.1
+    - 10.1.1.50
+    - 10.1.1.60
+    - 10.1.1.100
+    - 10.1.1.110
+    - 10.1.1.120
+    - 10.1.1.130
+    - 10.1.1.150
+  # 包含所有etcd节点IP
+  etcd:
+    - 10.1.1.100
+    - 10.1.1.130
+    - 10.1.1.120
+
+# k8s插件镜像
+
+coredns_images: 'coredns/coredns:1.8.0'
+dashboard_images: 'kubernetesui/dashboard:v2.0.4'
+traefik_images: 'traefik:v1.7.26'

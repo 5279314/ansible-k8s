@@ -1,0 +1,25 @@
+[master]
+10.1.1.100 node_name=k8s-master1
+#10.1.1.110 node_name=k8s-master2
+
+[node]
+10.1.1.120 node_name=k8s-node1
+10.1.1.130 node_name=k8s-node2
+
+[etcd]
+10.1.1.100 etcd_name=etcd-1
+10.1.1.130 etcd_name=etcd-2
+10.1.1.120 etcd_name=etcd-3
+
+[lb]
+# 如果部署单Master，该项忽略
+10.1.1.100 lb_name=lb-master
+10.1.1.110 lb_name=lb-backup
+
+
+[k8s:children]
+master
+node
+
+[newnode]
+#192.168.31.74 node_name=k8s-node3

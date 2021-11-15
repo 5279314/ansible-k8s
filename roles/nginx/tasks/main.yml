@@ -1,0 +1,27 @@
+- name: 安装Nginx
+  yum:
+    name: nginx
+    state: present
+
+- name: 分发Nginx 配置文件
+  template: src={{ item }} dest=/etc/nginx/
+  with_items:
+    - nginx.conf.j2
+
+- name: 分发Nginx 配置文件
+  template: src={{ item }} dest=/etc/nginx/conf.d/{{ item.split('.')[:-1]|join('.') }}
+  with_items:
+    - dashboard.od.com.conf.j2
+    - od.com.conf.j2
+
+- name: 创建临时目录
+  file: dest=/etc/nginx/certs/ state=directory
+
+- name: 分发证书
+  copy: src={{ item }} dest=/etc/nginx/certs/
+  with_items:
+    - dashboard.od.com.crt
+    - dashboard.od.com.key
+
+- name: 启动Nginx 服务
+  systemd: name=nginx state=restarted enabled=yes daemon_reload=yes

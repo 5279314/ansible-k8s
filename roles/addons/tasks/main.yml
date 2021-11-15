@@ -1,0 +1,27 @@
+- name: 拷贝YAML文件到Master
+  template: src={{ item }} dest={{ tmp_dir }}/{{ item.split('.')[:-1]|join('.') }}
+  with_items:
+    - coredns.yml.j2
+    - dashboard.yml.j2
+    - traefik.yml.j2
+
+- name: 部署Dashboard,CoreDNS,Ingress
+  ignore_errors: yes
+  shell: |
+     cd {{ tmp_dir }}
+     for yaml in $(ls *.yml);do kubectl apply -f $yaml;done
+- name: 查看Pod状态
+  shell: kubectl get all --all-namespaces
+  register: getall
+- debug: var=getall.stdout_lines
+
+- name: 获取Dashboard管理员令牌
+  ignore_errors: yes
+  shell: |
+     web='https://dashboard.od.com'
+     token=$(kubectl describe secret admin-user -n kube-system)
+     echo "访问地址--->$web"
+     echo "令牌内容--->$token" 
+  register: ui
+- name: Kubernetes Dashboard登录信息
+  debug: var=ui.stdout_lines

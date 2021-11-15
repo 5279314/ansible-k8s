@@ -1,0 +1,24 @@
+[Unit]
+Description=Flanneld overlay address etcd agent
+After=network.target
+After=network-online.target
+Wants=network-online.target
+After=etcd.service
+Before=docker.service
+[Service]
+Type=notify
+ExecStart=/opt/flannel/flanneld \
+  -etcd-cafile=/opt/flannel/ca.pem \
+  -etcd-certfile=/opt/flannel/server.pem \
+  -etcd-keyfile=/opt/flannel/server-key.pem \
+  -etcd-endpoints={% for host in groups['etcd'] %}https://{{ hostvars[host].inventory_hostname }}:2379{% if not loop.last %},{% endif %}{% endfor %} \
+  -etcd-prefix=/coreos.com/network \
+  -iface=eth0 \
+  -ip-masq 
+ExecStartPost=/opt/flannel/mk-docker-opts.sh -d /opt/flannel/subnet.env
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+[Install]
+WantedBy=multi-user.target
+RequiredBy=docker.service

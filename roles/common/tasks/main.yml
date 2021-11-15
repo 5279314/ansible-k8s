@@ -1,0 +1,5 @@
+---
+- name: 添加hosts
+  template: src=hosts.j2 dest=/etc/hosts
+- name: 拷贝时区
+  copy: src=/usr/share/zoneinfo/Asia/Shanghai dest=/etc/localtime backup=yes
