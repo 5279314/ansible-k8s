@@ -1,0 +1,14 @@
+[Unit]
+Description=nginx service
+After=network.target 
+   
+[Service] 
+Type=forking 
+PIDFile={{ install_dir }}/{{ nginx_ver }}/logs/nginx.pid
+ExecStart={{ sbin_path }}
+ExecReload={{ sbin_path }} -s reload
+ExecStop={{ sbin_path }} -s stop
+PrivateTmp=true
+   
+[Install] 
+WantedBy=multi-user.target

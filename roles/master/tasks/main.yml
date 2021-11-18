@@ -110,3 +110,4 @@
     /opt/etcd/bin/etcdctl set /coreos.com/network/config '{"Network": "172.7.0.0/16", "Backend": {"Type": "host-gw"}}' && touch /tmp/k8s.network
   args:
     creates: /tmp/k8s.network
+  when: node_name == 'k8s-master1'

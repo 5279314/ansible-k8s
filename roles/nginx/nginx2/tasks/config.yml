@@ -1,0 +1,33 @@
+- name: 创建临时目录
+  file: dest={{ item }} state=directory
+  with_items:
+    - '/etc/nginx/certs/'
+    - '/etc/nginx/conf.d/'
+
+- name: 分发Nginx 配置文件
+  copy: src=nginx.conf dest=/etc/nginx/
+
+- name: 分发Nginx 配置文件
+  template: src={{ item }} dest=/etc/nginx/conf.d/{{ item.split('.')[:-1]|join('.') }}
+  with_items:
+    - dashboard.od.com.conf.j2
+    - od.com.conf.j2
+
+
+- name: 分发证书
+  copy: src={{ item }} dest=/etc/nginx/certs/
+  with_items:
+    - dashboard.od.com.crt
+    - dashboard.od.com.key
+
+- name: 检查Nginx配置文件
+  command: /usr/sbin/nginx -t
+  register: check_nginx
+  changed_when: ( check_nginx.stdout.find('successful') )
+
+- name: 添加systemd启动管理
+  template: src=nginx.service.j2 dest=/usr/lib/systemd/system/nginx.service
+
+
+- name: 启动Nginx 服务
+  systemd: name=nginx state=restarted enabled=yes daemon_reload=yes

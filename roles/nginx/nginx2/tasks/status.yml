@@ -1,0 +1,13 @@
+- name: check nginx configure status
+  command: /usr/sbin/nginx -t
+  register: check_nginx
+  changed_when: ( check_nginx.stdout.find('successful') )
+- name: configure nginx systemd start
+  template: src=nginx.service.j2 dest=/usr/lib/systemd/system/nginx.service
+
+- name: systemd reload nginx server
+  systemd:
+    daemon_reload: yes
+    name: nginx
+    enabled: yes
+    state: started

@@ -82,5 +82,4 @@
 - name: 启动flannel
   systemd: name={{ item }} state=restarted enabled=yes daemon_reload=yes
   with_items:
-    - etcd
     - flanneld

@@ -1,0 +1,9 @@
+- name: installed packages
+  yum: name={{ packages }} state=present
+  vars:
+    packages:
+      - openssl-devel
+      - pcre-devel
+      - gcc
+      - libxml2-devel
+      - libxslt-devel

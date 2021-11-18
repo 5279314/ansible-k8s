@@ -40,3 +40,18 @@ cert_hosts:
 coredns_images: 'coredns/coredns:1.8.0'
 dashboard_images: 'kubernetesui/dashboard:v2.0.4'
 traefik_images: 'traefik:v1.7.26'
+
+# Nginx 安装版本
+nginx_ver: nginx-1.18.0
+# user configure
+group: www
+user: www
+gid: 666
+uid: 666
+
+# nginx configure
+install_dir: "/usr/local/"
+sbin_path: "/usr/sbin/nginx"
+conf_path: "/etc/nginx/nginx.conf"
+error_log: "/var/log/nginx/error.log"
+http_log: "/var/log/nginx/access.log"

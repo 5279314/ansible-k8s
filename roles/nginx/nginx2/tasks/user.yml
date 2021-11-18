@@ -1,0 +1,4 @@
+- name: create nginx group
+  group: name=www gid=666 system=yes
+- name: create nginx user
+  user: name=www group=www uid=666 system=yes shell=/sbin/nologin create_home=no
