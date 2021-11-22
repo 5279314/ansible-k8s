@@ -2,8 +2,6 @@ upstream default_backend_traefik {
     {% for host in groups['node'] %}
     server {{ hostvars[host].inventory_hostname }}:30080 max_fails=3 fail_timeout=10s;
     {% endfor %}
-#    server 10.1.1.120:8123    max_fails=3 fail_timeout=10s;
-#    server 10.1.1.130:8123    max_fails=3 fail_timeout=10s;
 }
 server {
     server_name *.od.com;

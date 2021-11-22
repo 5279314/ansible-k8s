@@ -45,5 +45,5 @@
   gather_facts: false
   hosts: newnode
   roles:
-    - nginx2
+    - nginx
   tags: nginx

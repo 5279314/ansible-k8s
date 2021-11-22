@@ -23,3 +23,4 @@ node
 
 [newnode]
 #192.168.31.74 node_name=k8s-node3
+10.1.1.12 lb_name=lb-master
