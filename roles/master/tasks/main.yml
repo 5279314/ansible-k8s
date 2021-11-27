@@ -111,3 +111,9 @@
   args:
     creates: /tmp/k8s.network
   when: node_name == 'k8s-master1'
+- name: kubernetes自动补全命令
+  lineinfile:
+    dest: /etc/bashrc
+    line: "source <(kubectl completion bash)"
+    state: present
+    backup: yes

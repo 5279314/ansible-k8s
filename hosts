@@ -1,6 +1,6 @@
 [master]
 10.1.1.100 node_name=k8s-master1
-10.1.1.110 node_name=k8s-master2
+#10.1.1.110 node_name=k8s-master2
 
 [node]
 10.1.1.120 node_name=k8s-node1

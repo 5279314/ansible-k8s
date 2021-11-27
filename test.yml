@@ -24,7 +24,7 @@
   tags: master
 - name: 5.部署K8S Node
   gather_facts: false
-  hosts: node
+  hosts: k8s
   roles:
     - node
   tags: node
@@ -43,7 +43,7 @@
 
 - name: 8.部署Nginx
   gather_facts: false
-  hosts: newnode
+  hosts: localhost
   roles:
     - nginx
   tags: nginx
