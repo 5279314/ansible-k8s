@@ -1,10 +1,10 @@
 upstream default_backend_traefik {
-    {% for host in groups['node'] %}
+    {% for host in groups['k8s'] %}
     server {{ hostvars[host].inventory_hostname }}:30080 max_fails=3 fail_timeout=10s;
     {% endfor %}
 }
 server {
-    server_name *.od.com;
+    server_name *.{{ web_domain }};
   
     location / {
         proxy_pass http://default_backend_traefik;

@@ -62,13 +62,14 @@ cert_hosts:
     - etcd2.local
     - etcd3.local
     
-
 # k8s插件镜像
 coredns_images: 'coredns/coredns:1.10.1'
 dashboard_images: 'kubernetesui/dashboard:v2.6.1'
-Dashboard_Domain: "dashboard.od.com"
 traefik_images: 'traefik:v2.9'
+# 外部访问域名
+web_domain: "od.com"
 Traefike_Domain: "traefik.od.com"
+Dashboard_Domain: "dashboard.od.com"
 
 # Nginx 安装版本
 nginx_ver: nginx-1.26.2
