@@ -1,0 +1,19 @@
+upstream default_backend_traefik {
+    {% for host in groups['node'] %}
+    server {{ hostvars[host].inventory_hostname }}:30080 max_fails=3 fail_timeout=10s;
+    {% endfor %}
+}
+server {
+    server_name *.od.com;
+  
+    location / {
+        proxy_pass http://default_backend_traefik;
+        proxy_set_header Host       $http_host;
+        # 将客户端真实 IP 地址传递给后端服务
+        proxy_set_header X-Real-IP $remote_addr;
+        set_real_ip_from {{ pod_cidr }};
+        # 将客户端真实 IP 地址返回给客户端
+        add_header X-Real-IP $http_x_forwarded_for;
+        proxy_set_header x-forwarded-for $proxy_add_x_forwarded_for;
+    }
+}

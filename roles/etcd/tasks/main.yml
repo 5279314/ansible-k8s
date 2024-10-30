@@ -1,0 +1,86 @@
+---
+- name: 检查 etcd 是否已安装
+  shell: 'systemctl is-active etcd || echo "NoFound"'
+  register: etcd_status
+
+- block:
+    - name: 创建工作目录和所需目录
+      file:
+        path: "{{ etcd_work_dir }}/{{ item }}"
+        state: directory
+      loop:
+        - bin
+        - cfg
+        - ssl
+
+    - name: 创建临时和数据目录
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ tmp_dir }}"
+        - "{{ etcd_data_dir }}"
+        - "{{ etcd_data_dir }}/wal"
+
+    - name: 分发并解压 etcd 二进制包
+      unarchive:
+        src: "{{ item }}"
+        dest: "{{ tmp_dir }}"
+        creates: "{{ tmp_dir }}/etcd*"
+      with_fileglob:
+        - "{{ software_dir }}/etcd-v*.tar.gz"
+
+    - name: 移动 etcd 二进制文件
+      shell: cp -rf {{ tmp_dir }}/etcd-v*/{etcd,etcdctl} {{ etcd_work_dir }}/bin/
+      args:
+        creates: "{{ etcd_work_dir }}/bin/etcd"
+
+    - name: 分发证书
+      copy:
+        src: etcd_cert/{{ item }}
+        dest: "{{ etcd_work_dir }}/ssl"
+      loop:
+        - ca.pem
+        - server.pem
+        - server-key.pem
+
+    - name: 分发 etcd 配置文件
+      template:
+        src: config-etcd.yml.j2
+        dest: "{{ etcd_work_dir }}/cfg/config-etcd.yml"
+
+    - name: 分发 service 文件
+      template:
+        src: etcd.service.j2
+        dest: /usr/lib/systemd/system/etcd.service
+
+    - name: 时间同步
+      shell: ntpdate ntp.aliyun.com
+
+    - name: 启动 etcd
+      systemd:
+        name: etcd
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+
+    - name: 分发 etcd 脚本
+      template:
+        src: etcd.sh.j2
+        dest: "{{ tmp_dir }}/etcd.sh"
+        mode: u+x
+
+    - name: 获取 etcd 集群状态
+      shell: /bin/bash {{ tmp_dir }}/etcd.sh
+      register: status
+
+    - debug:
+        var: status.stdout_lines
+
+    - name: 创建k8s网络
+      shell: |
+        /opt/etcd/bin/etcdctl put /coreos.com/network/config '{"Network": "{{ pod_cidr }}", "Backend": {"Type": "host-gw"}}' && touch /tmp/k8s.network
+      args:
+        creates: /tmp/k8s.network
+      when: inventory_hostname == groups['etcd'][0]
+  when: "'NoFound' in etcd_status.stdout"

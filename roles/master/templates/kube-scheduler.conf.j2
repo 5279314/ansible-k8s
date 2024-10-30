@@ -1,0 +1,6 @@
+KUBE_SCHEDULER_OPTS="--v=2 \
+--leader-elect \
+--kubeconfig={{ k8s_work_dir }}/cfg/kube-scheduler.kubeconfig \
+--authentication-kubeconfig={{ k8s_work_dir }}/cfg/kube-scheduler.kubeconfig \
+--authorization-kubeconfig={{ k8s_work_dir }}/cfg/kube-scheduler.kubeconfig \
+--bind-address=0.0.0.0"

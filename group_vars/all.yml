@@ -1,0 +1,95 @@
+# 安装存放目录 
+software_dir: '/server/tools'
+k8s_work_dir: '/opt/kubernetes'
+etcd_work_dir: '/opt/etcd'
+etcd_data_dir: '/var/lib/etcd'
+tmp_dir: '/tmp/k8s'
+
+#CONTAINERD配置
+CONTAINERD_STORAGE_DIR: "/var/lib/containerd"
+SANDBOX_IMAGE: "registry.aliyuncs.com/google_containers/pause:3.9"
+ENABLE_MIRROR_REGISTRY: true   # 开启镜像加速，不开启下面则不会生效
+MIRROR_DIR: "/etc/containerd/registry.d"
+
+# 集群网络
+service_cidr: '192.168.0.0/16'
+localhost_dns: '223.5.5.5'
+cluster_dns: '192.168.0.2'   # 与roles/addons/files/coredns.yaml中IP一致，并且是service_cidr中的IP
+pod_cidr: "172.17.0.0/16" # 与roles/addons/files/calico.yaml中网段一致
+service_nodeport_range: '30000-32767'
+cluster_domain: 'cluster.local'
+node_pod_ip: "172.17.{{ inventory_hostname.split('.')[3] }}.1/24"
+
+## 代理模式
+PROXY_MODE: "ipvs" # iptables模式下面可以不填写,填写也不生效
+IPVS_SCHEDULER: "nq"
+ENABLE_IPVS_STRICT_ARP: true
+# flanneld监听网卡 
+flanneld_nic: eth0
+
+# 集群TOKEN认证信息
+TOKEN: 'bc43e407e311d78b60da186fdd347fc8'
+
+# 高可用，如果部署单Master，该项忽略
+vip: '10.1.1.50'
+nic: 'eth0'  # 修改为实际内网网卡名
+listen: '16443'
+
+# 自签证书可信任IP列表，为方便扩展，可添加多个预留IP
+cert_hosts:
+  # 包含所有LB、VIP、Master IP和service_cidr的第一个IP
+  k8s:
+    - 127.0.0.1
+    - 192.168.0.1
+    - 10.1.1.50
+    - 10.1.1.60
+    - 10.1.1.100
+    - 10.1.1.110
+    - 10.1.1.120
+    - 10.1.1.130
+    - 10.1.1.150
+    - k8s-master.local
+    - k8s-master01.local
+    - k8s-master02.local
+    - k8s-node01.local
+    - k8s-node02.local
+  # 包含所有etcd节点IP
+  etcd:
+    - 10.1.1.100
+    - 10.1.1.120
+    - 10.1.1.130
+    - etcd1.local
+    - etcd2.local
+    - etcd3.local
+    
+
+# k8s插件镜像
+coredns_images: 'coredns/coredns:1.10.1'
+dashboard_images: 'kubernetesui/dashboard:v2.6.1'
+Dashboard_Domain: "dashboard.od.com"
+traefik_images: 'traefik:v2.9'
+Traefike_Domain: "traefik.od.com"
+
+# Nginx 安装版本
+nginx_ver: nginx-1.26.2
+# user configure
+Ngx_Group: www
+Ngx_User: www
+Ngx_Gid: 666
+Ngx_Uid: 666
+
+# nginx configure
+install_dir: "/usr/local/"
+sbin_path: "/usr/sbin/nginx"
+conf_path: "/etc/nginx/nginx.conf"
+error_log: "/var/log/nginx/error.log"
+http_log: "/var/log/nginx/access.log"
+
+# 内核修改
+sysctl_file: "/etc/sysctl.d/99-kubernetes-cri.conf"
+sysctl_params:
+  - "net.ipv4.ip_forward = 1"
+  - "net.bridge.bridge-nf-call-iptables = 1"   #将桥接的IPv4流量传递到iptables
+  - "net.bridge.bridge-nf-call-ip6tables = 1"  #将桥接的IPv6流量传递到iptables
+  - "net.bridge.bridge-nf-call-arptables=1"
+  - "net.ipv4.ip_nonlocal_bind = 1"            #允许服务绑定一个本机不存在的IP地址，haproxy部署高可用使用vip时会用到

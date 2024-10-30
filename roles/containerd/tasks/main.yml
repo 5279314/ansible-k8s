@@ -1,0 +1,68 @@
+- name: 检查 containerd 是否已安装
+  shell: 'systemctl is-active containerd || echo "NoFound"'
+  register: containerd_svc
+
+- block:
+    - name: 创建所需目录
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ tmp_dir }}"
+        - "/etc/containerd"
+
+    - name: 分发并解压 containerd 包
+      unarchive:
+        src: "{{ item }}"
+        dest: "/"
+      with_fileglob:
+        - "{{ software_dir }}/*-containerd-*.tar.gz"
+
+    - name: 加载内核模块 overlay
+      modprobe:
+        name: overlay
+        state: present
+
+    - name: 创建 containerd 配置文件
+      template:
+        src: config.toml.j2
+        dest: /etc/containerd/config.toml
+
+    - name: 创建 Docker 镜像源
+      file:
+        path: "{{ MIRROR_DIR }}/docker.io"
+        state: directory
+      when: ENABLE_MIRROR_REGISTRY | bool
+
+    - name: 复制 Dcoker 镜像源配置
+      copy:
+        src: hosts.toml
+        dest: "{{ MIRROR_DIR }}/docker.io"
+      when: ENABLE_MIRROR_REGISTRY | bool
+
+    - name: 启动 containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+
+    - name: 添加 crictl 自动补全
+      lineinfile:
+        path: ~/.bashrc
+        state: present
+        regexp: '^source <\(crictl completion bash\)>$'
+        line: 'source <(crictl completion bash)'
+
+    - name: 复制 runC 依赖软件
+      copy:
+        src: libseccomp-2.5.1-1.el8.x86_64.rpm
+        dest: "{{ tmp_dir }}"
+
+    - name: 更新 runC 依赖
+      command: rpm -Uvh {{ tmp_dir }}/libseccomp-2.5.1-1.el8.x86_64.rpm
+      args:
+        warn: false
+
+  when: "'NoFound' in containerd_svc.stdout"
+

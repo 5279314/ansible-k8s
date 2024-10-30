@@ -1,0 +1,8 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+{% for host in groups['k8s'] %}
+{{ hostvars[host].inventory_hostname }} {{ hostvars[host].node_name }} {{ hostvars[host].node_domain }}
+{% endfor %} 
+{% for etcd in groups['etcd'] %}
+{{ hostvars[etcd].inventory_hostname }} {{ hostvars[etcd].etcd_domain }}
+{% endfor %}

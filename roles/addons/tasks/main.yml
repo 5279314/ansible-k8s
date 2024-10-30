@@ -1,0 +1,35 @@
+- name: 拷贝YAML文件到Master
+  template:
+    src: "{{ item }}"
+    dest: "{{ tmp_dir }}/{{ item.split('.')[:-1]|join('.') }}"
+  with_items:
+    - coredns.yml.j2
+    - dashboard.yml.j2
+    - traefik.yml.j2
+
+- name: 部署Dashboard,CoreDNS,Ingress
+  ignore_errors: yes
+  shell: |
+     cd {{ tmp_dir }}
+     # 通过openssl创建证书
+     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout {{ Dashboard_Domain }}.key -out {{ Dashboard_Domain }}.crt -subj "/CN={{ Dashboard_Domain }}"
+     kubectl create secret tls dashboard-tls --cert={{ Dashboard_Domain }}.crt --key={{ Dashboard_Domain }}.key -n kube-system|| echo ok
+     kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/{{ traefik_images.split(':')[1] }}/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
+     for yaml in $(ls *.yml);do kubectl apply -f $yaml;done
+
+- name: 查看Pod状态
+  shell: kubectl get all --all-namespaces
+  register: getall
+
+- debug: var=getall.stdout_lines
+
+- name: 获取Dashboard管理员令牌
+  ignore_errors: yes
+  shell: |
+     web=https://{{ Dashboard_Domain }}
+     token=$(kubectl create token -n kube-system admin-user)
+     echo "访问地址--->$web"
+     echo "令牌内容--->$token" 
+  register: ui
+- name: Kubernetes Dashboard登录信息
+  debug: var=ui.stdout_lines

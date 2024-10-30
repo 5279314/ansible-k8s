@@ -1,0 +1,15 @@
+[Unit]
+Description=Etcd Server
+After=network.target
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart={{ etcd_work_dir }}/bin/etcd --config-file={{ etcd_work_dir }}/cfg/config-etcd.yml
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

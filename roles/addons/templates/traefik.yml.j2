@@ -1,0 +1,214 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: kube-system
+  name: traefik-ingress-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: traefik-ingress-controller
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - traefik.io
+      - traefik.containo.us
+    resources:
+      - middlewares
+      - middlewaretcps
+      - ingressroutes
+      - traefikservices
+      - ingressroutetcps
+      - ingressrouteudps
+      - tlsoptions
+      - tlsstores
+      - serverstransports
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: traefik-ingress-controller
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: traefik-ingress-controller
+subjects:
+  - kind: ServiceAccount
+    name: traefik-ingress-controller
+    namespace: kube-system
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  labels:
+    app: traefik-{{ traefik_images.split(':')[1] }}
+  name: traefik
+spec:
+  controller: traefik.io/ingress-controller
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: traefik-config
+  namespace: kube-system
+data:
+  traefik.yaml: |-
+    global:
+      checkNewVersion: false      # 周期性的检查是否有新版本发布
+      sendAnonymousUsage: false   # 周期性的匿名发送使用统计信息
+    ping: ""                      # 启用 Ping
+    websocket: true               
+    serversTransport:             
+      insecureSkipVerify: true    # Traefik 忽略验证代理服务的 TLS 证书
+    api:                          
+      insecure: true              # 允许 HTTP 方式访问 API
+      dashboard: true             # 启用 Dashboard
+      debug: false                # 启用 Debug 调试模式
+    metrics:                      
+      prometheus:                 # 配置 Prometheus 监控指标数据，并使用默认配置
+        addRoutersLabels: true    # 添加routers metrics
+        entryPoint: "metrics"     # 指定metrics监听地址
+    entryPoints:                  
+      web:                        
+        address: ":80"            # 配置 80 端口，并设置入口名称为 web
+        forwardedHeaders:         # 通过X-Forwarded-For 获取真是访问IP
+          trustedIPs:             # Traefik配置为信任转发X-Forwarded-For信息
+            - "127.0.0.1"
+      websecure:
+        address: ":443"           # 配置443端口，并设置入口名称为 websecure
+      traefik:
+        address: ":8090"          # 配置 8090 端口，并设置入口名称为 dashboard
+      metrics:
+        address: ":9100"          # 配置 9100 端口，作为metrics收集入口
+      mongo:
+        address: ":27017"         # 配置9200端口，作为tcp入口
+      udpep:
+        address: ":9300/udp"      # 配置9300端口，作为udp入口
+    providers:
+      # kubernetesGateway: ""     # 启用 Kubernetes Gateway API
+      kubernetesCRD:              # 启用Kubernetes CRD方式来配置路由规则
+        ingressClass: ""          # 指定traefik的ingressClass名称
+        allowCrossNamespace: true   #允许跨namespace
+        allowEmptyServices: true    #允许空endpoints的service
+      kubernetesIngress: ""         ## 启用 Kubernetes Ingress 方式来配置路由规则
+    log:
+      filePath: ""                ## 设置调试日志文件存储路径，如果为空则输出到控制台
+      level: "ERROR"              ## 设置调试日志级别
+      format: json                ## 设置调试日志格式
+    accessLog:
+      filePath: ""              ## 设置访问日志文件存储路径，如果为空则输出到控制台
+      format: json              ## 设置访问调试日志格式
+      bufferingSize: 0          ## 设置访问日志缓存行数
+      filters:
+        statusCodes: ["200"]    ## 设置只保留指定状态码范围内的访问日志
+        retryAttempts: true     ## 设置代理访问重试失败时，保留访问日志
+        minDuration: 20         ## 设置保留请求时间超过指定持续时间的访问日志
+      fields:                   ## 设置访问日志中的字段是否保留（keep 保留、drop 不保留）
+        defaultMode: keep       ## 设置默认保留访问日志字段
+        names:                  ## 针对访问日志特别字段特别配置保留模式
+          ClientUsername: drop
+          StartUTC: drop        # 禁用日志timestamp使用UTC
+        headers:                ## 设置 Header 中字段是否保留
+          defaultMode: keep     ## 设置默认保留 Header 中字段
+          names:                ## 针对 Header 中特别字段特别配置保留模式
+            User-Agent: redact   # 可以针对指定agent
+            Authorization: drop
+            Content-Type: keep
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik-{{ traefik_images.split(':')[-1] | replace('.', '-') }}
+  namespace: kube-system
+  labels:
+    app: traefik-{{ traefik_images.split(':')[1] }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik-{{ traefik_images.split(':')[1] }}
+  template:
+    metadata:
+      labels:
+        app: traefik-{{ traefik_images.split(':')[1] }}
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: traefik
+          image: {{ traefik_images }}
+          args:
+            - --configfile=/config/traefik.yaml
+          ports:
+            - name: web
+              containerPort: 80
+              hostPort: 30080        # 将容器端口绑定所在真实服务器的 30080 端口（nginx反向代理配置端口）
+              protocol: TCP          # 使用UDP, TCP或SCTP协议，默认为TCP
+            - name: webse
+              containerPort: 443
+              hostPort: 30443
+              protocol: TCP          # 使用UDP, TCP或SCTP协议，默认为TCP
+            - name: admin
+              containerPort: 8090    # Traefik Dashboard 端口
+          securityContext:
+            capabilities:             
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          volumeMounts:
+          - mountPath: "/config"
+            name: "config"
+      volumes:
+        - name: config
+          configMap:
+            name: traefik-config
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: kube-system
+spec:
+  entryPoints:
+  - web
+  routes:
+  - match: Host(`{{ Traefike_Domain }}`)  # 指定域名
+    kind: Rule
+    services:
+    - name: api@internal
+      kind: TraefikService

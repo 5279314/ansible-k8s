@@ -1,0 +1,66 @@
+---
+- name: 获取 Ansible 工作目录
+  shell: pwd | sed 's#roles/tls##'
+  register: root_dir
+
+- name: 检查 root_dir 是否存在
+  stat:
+    path: "{{ root_dir.stdout }}/ssl"
+  register: ssl_dir_stat
+
+- block:
+  - name: 创建工作目录
+    file:
+      path: "{{ root_dir.stdout }}/ssl/{{ item }}"
+      state: directory
+    loop:
+      - etcd
+      - k8s
+  
+  - name: 准备 cfssl 工具
+    unarchive:
+      src: "{{ software_dir }}/cfssl.tar.gz"
+      dest: /usr/bin/
+      mode: u+x
+  
+  - name: 准备生成 etcd 证书请求文件
+    template:
+      src: "etcd/{{ item }}"
+      dest: "{{ root_dir.stdout }}/ssl/etcd/{{ item | basename | regex_replace('\\.j2$', '') }}"
+    loop:
+      - ca-config.json.j2
+      - ca-csr.json.j2
+      - server-csr.json.j2
+  
+  - name: 准备生成 etcd 证书脚本
+    copy:
+      src: generate_etcd_cert.sh
+      dest: "{{ root_dir.stdout }}/ssl/etcd"
+      mode: u+x
+  
+  - name: 生成 etcd 证书
+    shell: cd "{{ root_dir.stdout }}/ssl/etcd" && /bin/bash generate_etcd_cert.sh
+  
+  - name: 准备 k8s 证书请求文件
+    template:
+      src: "k8s/{{ item }}"
+      dest: "{{ root_dir.stdout }}/ssl/k8s/{{ item | basename | regex_replace('\\.j2$', '') }}"
+    loop:
+      - ca-config.json.j2  
+      - ca-csr.json.j2  
+      - server-csr.json.j2
+      - kube-proxy-csr.json.j2  
+      - kube-controller-manager-csr.json.j2
+      - kube-scheduler-csr.json.j2
+      - admin-csr.json.j2
+      - serviceaccount-csr.json.j2
+  
+  - name: 准备生成 k8s 证书脚本
+    copy:
+      src: generate_k8s_cert.sh
+      dest: "{{ root_dir.stdout }}/ssl/k8s"
+      mode: u+x
+  
+  - name: 生成 k8s 证书
+    shell: cd "{{ root_dir.stdout }}/ssl/k8s" && /bin/bash generate_k8s_cert.sh
+  when: ssl_dir_stat.stat.exists == false  # 仅当目录不存在时创建  

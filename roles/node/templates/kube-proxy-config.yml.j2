@@ -1,0 +1,19 @@
+kind: KubeProxyConfiguration
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+bindAddress: 0.0.0.0
+metricsBindAddress: {{ inventory_hostname }}:10249
+clientConnection:
+  kubeconfig: {{ k8s_work_dir }}/cfg/kube-proxy.kubeconfig
+conntrack:
+  maxPerCore: 32768
+  min: 131072
+  tcpCloseWaitTimeout: 1h0m0s
+  tcpEstablishedTimeout: 24h0m0s
+hostnameOverride: {{ node_domain }} 
+clusterCIDR: {{ pod_cidr }}
+mode: "{{ PROXY_MODE }}"
+{% if PROXY_MODE == "ipvs" %}
+ipvs:
+  scheduler: "{{ IPVS_SCHEDULER }}"
+  strictARP: {{ ENABLE_IPVS_STRICT_ARP }}
+{% endif %}

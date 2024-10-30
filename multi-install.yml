@@ -1,0 +1,54 @@
+- name: 0.初始化
+  gather_facts: false
+  hosts: all
+  roles:
+    - common
+  tags: common
+- name: 1.部署Containerd
+  gather_facts: false
+  hosts: k8s
+  roles:
+    - containerd
+  tags: containerd
+- name: 2.自签证书 
+  gather_facts: false
+  hosts: localhost 
+  roles:
+    - tls
+  tags: tls
+- name: 3.部署ETCD集群
+  gather_facts: false
+  hosts: etcd
+  roles:
+    -  etcd
+  tags: etcd
+- name: 4.部署负载均衡高可用
+  gather_facts: false
+  hosts: lb
+  roles:
+    - ha
+  tags: ha
+- name: 5.部署K8S Master
+  gather_facts: false
+  hosts: master
+  roles:
+    - master
+  tags: master
+- name: 6.部署K8S Node
+  gather_facts: false
+  hosts: k8s
+  roles:
+    - node
+  tags: node
+- name: 7.部署插件
+  gather_facts: false
+  hosts: master
+  roles:
+    - addons
+  tags: addons
+- name: 8.部署Nginx
+  gather_facts: false
+  hosts: nginx
+  roles:
+    - nginx
+  tags: nginx

@@ -1,0 +1,46 @@
+load_module {{ install_dir }}{{ nginx_ver }}/modules/ngx_stream_module.so;
+user  {{ Ngx_User }};
+worker_processes  1;
+events {
+    worker_connections  1024;
+}
+stream {
+  upstream default_backend_traefik_tls {
+    {% for host in groups['node'] %}
+    server {{ hostvars[host].inventory_hostname }}:30443 max_fails=3 fail_timeout=10s;
+    {% endfor %}
+    }
+
+  map $ssl_preread_protocol $upstream{
+    default default_backend_traefik_tls;
+  }
+
+  server {
+    listen       443;
+    ssl_preread on;
+    ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+  
+    proxy_ssl_server_name on;
+    proxy_pass $upstream;
+    proxy_ssl_verify off;
+    }
+}
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+    include conf.d/*.conf;
+    server {
+        listen       80;
+        server_name  localhost;
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+    }
+}

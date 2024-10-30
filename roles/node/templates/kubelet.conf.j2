@@ -1,0 +1,12 @@
+KUBELET_OPTS="--v=2 \
+--hostname-override={{ node_domain }} \
+--cgroup-driver=systemd \
+--kubeconfig={{ k8s_work_dir }}/cfg/kubelet.kubeconfig \
+--bootstrap-kubeconfig={{ k8s_work_dir }}/cfg/bootstrap.kubeconfig \
+--config={{ k8s_work_dir }}/cfg/kubelet-config.yml \
+--cert-dir={{ k8s_work_dir }}/ssl \
+--runtime-request-timeout=15m \
+--runtime-cgroups=/systemd/system.slice \
+--kubelet-cgroups=/systemd/system.slice \
+--container-runtime-endpoint=unix:///run/containerd/containerd.sock \
+--pod-infra-container-image={{ SANDBOX_IMAGE }}"

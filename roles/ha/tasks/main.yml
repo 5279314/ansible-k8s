@@ -1,0 +1,48 @@
+- name: 创建临时目录
+  file:
+    dest: "{{ tmp_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: 安装keepalived及相关依赖
+  yum:
+    name: keepalived
+    state: present
+
+- name: 拷贝nginx配置文件
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - restart Nginx
+
+- name: 拷贝keepalived配置文件
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: 拷贝nginx健康检查脚本
+  copy:
+    src: check_nginx.sh
+    dest: /etc/keepalived/
+    mode: 'u+x'
+    owner: root
+    group: root
+
+- name: 启动nginx服务
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: 启动keepalived服务
+  systemd:
+    name: keepalived
+    state: restarted
+    enabled: yes

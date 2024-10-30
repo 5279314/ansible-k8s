@@ -1,0 +1,71 @@
+---
+- name: 修改主机名
+  hostname:
+    name: "{{ hostvars[inventory_hostname].node_domain }}"
+
+- name: 添加hosts
+  template: 
+    src: hosts.j2 
+    dest: /etc/hosts
+
+- name: 拷贝时区
+  copy: 
+    src: /usr/share/zoneinfo/Asia/Shanghai 
+    dest: /etc/localtime 
+    backup: yes
+
+- name: 确保配置文件存在
+  file:
+    path: "{{ sysctl_file }}"
+    state: touch
+
+- name: 启动 br_netfilter 内核模块
+  command:
+    cmd: modprobe br_netfilter
+
+- name: 配置Containerd所需的内核
+  lineinfile:
+    path: "{{ sysctl_file }}"
+    line: "{{ item }}"
+    state: present
+  loop: "{{ sysctl_params }}"
+
+- name: 应用 sysctl 参数
+  command: sysctl -p "{{ sysctl_file }}"
+
+- name: 关闭 swap
+  command: swapoff -a
+
+- name: 注释掉 fstab 中的 swap 行
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^(.*swap.*)'
+    state: absent
+
+- name: 加载 ipvs 模块
+  shell: |
+    if [ -d /usr/lib/modules/$(uname -r)/kernel/net/netfilter/ipvs/ ]; then
+        for module in $(ls /usr/lib/modules/$(uname -r)/kernel/net/netfilter/ipvs/); do
+            module=${module%%.*}
+            modprobe $module >/dev/null 2>&1
+        done
+    fi
+  args:
+    executable: /bin/bash
+  when: PROXY_MODE == "ipvs"
+
+- name: 安装IPtables防火墙
+  yum:
+    name: iptables-services
+    state: present
+- name: 启动Iptables防火墙
+  systemd:
+    name: iptables
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+- name: 初始化防火墙
+  shell: |
+    ## 删除这俩条规则
+    iptables -t filter -D INPUT -j REJECT --reject-with icmp-host-prohibited
+    iptables -t filter -D FORWARD -j REJECT --reject-with icmp-host-prohibited

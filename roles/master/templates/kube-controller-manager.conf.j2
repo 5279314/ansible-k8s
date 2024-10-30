@@ -1,0 +1,14 @@
+KUBE_CONTROLLER_MANAGER_OPTS="--v=2 \
+--leader-elect=true \
+--bind-address=0.0.0.0 \
+--kubeconfig={{ k8s_work_dir }}/cfg/kube-controller-manager.kubeconfig \
+--authentication-kubeconfig={{ k8s_work_dir }}/cfg/kube-controller-manager.kubeconfig \
+--authorization-kubeconfig={{ k8s_work_dir }}/cfg/kube-controller-manager.kubeconfig \
+--cluster-cidr={{ pod_cidr }} \
+--cluster-name=kubernetes \
+--service-cluster-ip-range={{ service_cidr }} \
+--cluster-signing-cert-file={{ k8s_work_dir }}/ssl/ca.pem \
+--cluster-signing-key-file={{ k8s_work_dir }}/ssl/ca-key.pem  \
+--root-ca-file={{ k8s_work_dir }}/ssl/ca.pem \
+--service-account-private-key-file={{ k8s_work_dir }}/ssl/serviceaccount-key.pem \
+--cluster-signing-duration=87600h0m0s"
