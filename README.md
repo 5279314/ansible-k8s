@@ -9,13 +9,13 @@
 ## 软件环境准备
 
 - **操作系统**：是基于 CentOS 操作系统编写的。
-- **etcd：**https://github.com/etcd-io/etcd/releases
-- **证书签发工具CFSSL：**https://github.com/cloudflare/cfssl/releases
-- **Containerd：**https://github.com/containerd/containerd/releases
-- **Kubernetes：**https://github.com/kubernetes/kubernetes/releases
-- **Nginx：**https://nginx.org/en/download.html
-- **flanneld：**https://github.com/flannel-io/flannel/releases
-- **flannel-cni：**https://github.com/flannel-io/cni-plugin/releases/
+- **etcd：** https://github.com/etcd-io/etcd/releases
+- **证书签发工具CFSSL：** https://github.com/cloudflare/cfssl/releases
+- **Containerd：** https://github.com/containerd/containerd/releases
+- **Kubernetes：** https://github.com/kubernetes/kubernetes/releases
+- **Nginx：** https://nginx.org/en/download.html
+- **flanneld：** https://github.com/flannel-io/flannel/releases
+- **flannel-cni：** https://github.com/flannel-io/cni-plugin/releases/
 
 ## 架构图
 
