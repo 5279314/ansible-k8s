@@ -35,9 +35,9 @@
       when: ENABLE_MIRROR_REGISTRY | bool
 
     - name: 复制 Dcoker 镜像源配置
-      copy:
-        src: hosts.toml
-        dest: "{{ MIRROR_DIR }}/docker.io"
+      template:
+        src: hosts.toml.j2
+        dest: "{{ MIRROR_DIR }}/docker.io/hosts.toml"
       when: ENABLE_MIRROR_REGISTRY | bool
 
     - name: 启动 containerd

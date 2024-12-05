@@ -1,0 +1,5 @@
+server = "https://docker.io"
+{% for repo in DOCKER_REPO %}
+[host."https://{{ repo }}"]
+  capabilities = ["pull", "resolve"]
+{% endfor %}

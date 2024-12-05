@@ -10,6 +10,11 @@ CONTAINERD_STORAGE_DIR: "/var/lib/containerd"
 SANDBOX_IMAGE: "registry.aliyuncs.com/google_containers/pause:3.9"
 ENABLE_MIRROR_REGISTRY: true   # 开启镜像加速，不开启下面则不会生效
 MIRROR_DIR: "/etc/containerd/registry.d"
+DOCKER_REPO:
+  - hub.geekery.cn
+  - hub.littlediary.cn
+  - docker.rainbond.cc
+  - docker.unsee.tech
 
 # 集群网络
 service_cidr: '192.168.0.0/16'
