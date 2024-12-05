@@ -64,8 +64,16 @@
     state: restarted
     enabled: yes
     daemon_reload: yes
+
 - name: 初始化防火墙
   shell: |
-    ## 删除这俩条规则
-    iptables -t filter -D INPUT -j REJECT --reject-with icmp-host-prohibited
-    iptables -t filter -D FORWARD -j REJECT --reject-with icmp-host-prohibited
+    # 检查规则是否存在，存在则删除
+    iptables -t filter -C INPUT -j REJECT --reject-with icmp-host-prohibited 2>/dev/null && iptables -t filter -D INPUT -j REJECT --reject-with icmp-host-prohibited || echo "规则不存在，跳过"
+    iptables -t filter -C FORWARD -j REJECT --reject-with icmp-host-prohibited 2>/dev/null && iptables -t filter -D FORWARD -j REJECT --reject-with icmp-host-prohibited || echo "规则不存在，跳过"
+
+- name: 配置重启关机自动保存IPtables规则
+  lineinfile:
+    path: /etc/sysconfig/iptables-config
+    regexp: '^IPTABLES_SAVE_ON_STOP="no"'
+    line: 'IPTABLES_SAVE_ON_STOP="yes"'
+    backrefs: yes

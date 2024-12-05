@@ -14,8 +14,8 @@
 
 [lb]
 # 如果部署单Master，该项忽略,填写也不会影响
-10.1.1.100 lb_name=lb-master
-10.1.1.110 lb_name=lb-backup
+#10.1.1.100 lb_name=lb-master
+#10.1.1.110 lb_name=lb-backup
 
 [nginx]
 10.1.1.10 node_name=nginx node_domain=nginx.local
@@ -29,6 +29,3 @@ node
 #10.1.1.12 lb_name=lb-master
 
 [all:children]
-master
-node
-nginx
