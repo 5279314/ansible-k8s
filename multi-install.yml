@@ -1,5 +1,5 @@
 - name: 0.初始化
-  gather_facts: false
+  gather_facts: yes
   hosts: all
   roles:
     - common
@@ -29,7 +29,7 @@
     - ha
   tags: ha
 - name: 5.部署K8S Master
-  gather_facts: false
+  gather_facts: yes
   hosts: master
   roles:
     - master
@@ -47,7 +47,7 @@
     - addons
   tags: addons
 - name: 8.部署Nginx
-  gather_facts: false
+  gather_facts: yes
   hosts: nginx
   roles:
     - nginx

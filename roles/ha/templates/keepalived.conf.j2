@@ -22,7 +22,7 @@ vrrp_script check_nginx {
 
 vrrp_instance VI_1 { 
     state {{ role }} 
-    interface {{ nic }}
+    interface {{ ansible_facts.interfaces | first }}
     virtual_router_id 51        # VRRP 路由 ID实例，每个实例是唯一的 
     priority {{  priority }}    # 优先级，备服务器设置 90 
     advert_int 1                # 指定VRRP 心跳包通告间隔时间，默认1秒 

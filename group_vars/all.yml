@@ -29,15 +29,12 @@ node_pod_ip: "172.17.{{ inventory_hostname.split('.')[3] }}.1/24"
 PROXY_MODE: "ipvs" # iptables模式下面可以不填写,填写也不生效
 IPVS_SCHEDULER: "nq"
 ENABLE_IPVS_STRICT_ARP: true
-# flanneld监听网卡 
-flanneld_nic: eth0
 
 # 集群TOKEN认证信息
 TOKEN: 'bc43e407e311d78b60da186fdd347fc8'
 
 # 高可用，如果部署单Master，该项忽略
 vip: '10.1.1.50'
-nic: 'eth0'  # 修改为实际内网网卡名
 listen: '16443'
 
 # 自签证书可信任IP列表，为方便扩展，可添加多个预留IP
@@ -53,6 +50,9 @@ cert_hosts:
     - 10.1.1.120
     - 10.1.1.130
     - 10.1.1.150
+    - 10.1.1.210
+    - 10.1.1.220
+    - 10.1.1.230
     - k8s-master.local
     - k8s-master01.local
     - k8s-master02.local
@@ -60,9 +60,9 @@ cert_hosts:
     - k8s-node02.local
   # 包含所有etcd节点IP
   etcd:
-    - 10.1.1.100
-    - 10.1.1.120
-    - 10.1.1.130
+    - 10.1.1.210
+    - 10.1.1.220
+    - 10.1.1.230
     - etcd1.local
     - etcd2.local
     - etcd3.local

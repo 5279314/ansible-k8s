@@ -4,14 +4,14 @@
     name: "{{ hostvars[inventory_hostname].node_domain }}"
 
 - name: 添加hosts
-  template: 
-    src: hosts.j2 
+  template:
+    src: hosts.j2
     dest: /etc/hosts
 
 - name: 拷贝时区
-  copy: 
-    src: /usr/share/zoneinfo/Asia/Shanghai 
-    dest: /etc/localtime 
+  copy:
+    src: /usr/share/zoneinfo/Asia/Shanghai
+    dest: /etc/localtime
     backup: yes
 
 - name: 确保配置文件存在
@@ -54,16 +54,53 @@
     executable: /bin/bash
   when: PROXY_MODE == "ipvs"
 
-- name: 安装IPtables防火墙
-  yum:
-    name: iptables-services
+# 针对不同操作系统（CentOS vs Ubuntu）安装依赖包
+- name: 安装依赖包
+  package:
+    name: "{{ item }}"
     state: present
-- name: 启动Iptables防火墙
+  loop:
+    - "ipset"
+    - "chrony"
+    - "ntpdate"
+    - "{{ 'iptables' if ansible_facts['distribution'] == 'CentOS' else 'iptables-persistent' }}"
+
+- name: 启动防火墙
   systemd:
-    name: iptables
-    state: restarted
+    name: "{{ 'iptables' if ansible_facts['distribution'] == 'CentOS' else 'netfilter-persistent' }}"
+    state: started
     enabled: yes
-    daemon_reload: yes
+
+- name: 配置Chrony NTP服务器
+  template:
+    src: server-chrony.conf.j2
+    dest: "{{ chrony_config_file }}"
+  when: ntp_server | default(false)
+  vars:
+    chrony_config_file: "{{ '/etc/chrony.conf' if ansible_facts['distribution'] == 'CentOS' else '/etc/chrony/chrony.conf' }}"
+
+- name: 配置Chrony NTP客户端
+  template:
+    src: client-chrony.conf.j2
+    dest: "{{ chrony_config_file }}"
+  when: ntp_server | default(false) != "true"
+  vars:
+    chrony_config_file: "{{ '/etc/chrony.conf' if ansible_facts['distribution'] == 'CentOS' else '/etc/chrony/chrony.conf' }}"
+
+- name: 定义NTP服务器地址
+  set_fact:
+    ntp_server: "{{ (groups['all'] | selectattr('ntp_server', 'defined') | selectattr('ntp_server') | list | first) if (groups['all'] | selectattr('ntp_server', 'defined') | selectattr('ntp_server') | list | length) > 0 else 'ntp.aliyun.com' }}"
+
+- name: 启动NTP服务
+  systemd:
+    name: chronyd.service
+    state: started
+    enabled: yes
+
+- name: 时间同步
+  shell: "ntpdate {{ ntp_server }}"
+  register: ntpdate_result
+  ignore_errors: true
 
 - name: 初始化防火墙
   shell: |
@@ -77,3 +114,9 @@
     regexp: '^IPTABLES_SAVE_ON_STOP="no"'
     line: 'IPTABLES_SAVE_ON_STOP="yes"'
     backrefs: yes
+  when: ansible_facts['distribution'] == 'CentOS'
+
+- name: Ubuntu上netfilter-persistent保存规则
+  command: netfilter-persistent save
+  when: ansible_facts['distribution'] == 'Ubuntu'
+

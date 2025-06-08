@@ -3,18 +3,43 @@
     dest: "{{ tmp_dir }}"
     state: directory
     mode: '0755'
-- name: 安装nginx相关依赖环境
+- name: 检查是否是CentOS
+  stat:
+    path: /etc/redhat-release
+  register: redhat_release
+
+- name: 检查是否是Ubuntu
+  stat:
+    path: /etc/os-release
+  register: os_release
+# 安装Nginx相关依赖环境（支持CentOS和Ubuntu）
+- name: 安装Nginx依赖（CentOS/RHEL）
   yum:
-    name: "{{ packages }}"
+    name: "{{ centos_packages }}"
     state: present
+  when: redhat_release.stat.exists
   vars:
-    packages:
+    centos_packages:
       - openssl-devel
       - pcre-devel
       - gcc
       - libxml2-devel
       - libxslt-devel
 
+- name: 安装Nginx依赖（Ubuntu/Debian）
+  apt:
+    name: "{{ ubuntu_packages }}"
+    state: present
+    update_cache: yes
+  when: os_release.stat.exists
+  vars:
+    ubuntu_packages:
+      - libssl-dev    # 对应CentOS的openssl-devel
+      - libpcre3-dev  # 对应CentOS的pcre-devel
+      - build-essential  # 包含gcc等编译工具
+      - libxml2-dev   # 对应CentOS的libxml2-devel
+      - libxslt1-dev  # 对应CentOS的libxslt-devel
+      - zlib1g-dev
 - name: 创建 Nginx 用户组
   group:
     name: "{{ Ngx_Group }}"

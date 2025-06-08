@@ -31,7 +31,9 @@
         - "{{ software_dir }}/etcd-v*.tar.gz"
 
     - name: 移动 etcd 二进制文件
-      shell: cp -rf {{ tmp_dir }}/etcd-v*/{etcd,etcdctl} {{ etcd_work_dir }}/bin/
+      shell: |
+        cp -rf {{ tmp_dir }}/etcd-v*/etcd {{ etcd_work_dir }}/bin/
+        cp -rf {{ tmp_dir }}/etcd-v*/etcdctl {{ etcd_work_dir }}/bin/
       args:
         creates: "{{ etcd_work_dir }}/bin/etcd"
 

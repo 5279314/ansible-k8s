@@ -1,3 +1,10 @@
+{% set non_lo_iface = [] %}
+{% for iface in ansible_facts.interfaces %}
+  {% if iface != 'lo' %}
+    {% set _ = non_lo_iface.append(iface) %}
+  {% endif %}
+{% endfor %}
+{% set non_lo_iface = non_lo_iface[0] if non_lo_iface else 'eth0' %} 
 [Unit]
 Description=Flanneld overlay address etcd agent
 After=network.target
@@ -13,7 +20,7 @@ ExecStart=/opt/flannel/flanneld \
   -etcd-endpoints={% for host in groups['etcd'] %}https://{{ hostvars[host].etcd_domain }}:2379{% if not loop.last %},{% endif %}{% endfor %} \
   -etcd-prefix=/coreos.com/network \
   -subnet-file=/run/flannel/subnet.env \
-  -iface={{ flanneld_nic }} \
+  -iface={{ non_lo_iface }} \
   -healthz-port=2401
 Restart=always
 RestartSec=5

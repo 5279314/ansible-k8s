@@ -1,0 +1,19 @@
+server npt.aliyun.com
+local stratum 1
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+{# 处理vip地址，保留前三位，第四位设为0 #}
+{% if vip is defined and vip %}
+  {% set vip_parts = vip.split('.') %}
+  {% if vip_parts | length >= 3 %}
+    {% set network_address = vip_parts[0] + '.' + vip_parts[1] + '.' + vip_parts[2] + '.0' %}
+  {% else %}
+    {% set network_address = '127.0.0.0' %}
+  {% endif %}
+{% else %}
+  {% set network_address = '127.0.0.0' %}
+{% endif %}
+
+allow {{ network_address }}/24
+logdir /var/log/chrony

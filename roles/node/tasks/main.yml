@@ -36,11 +36,12 @@
   with_fileglob:
     - "{{ software_dir }}/cni-plugin-flannel-*.tar.gz"
 
-
 - name: 移动flannel和k8s二进制文件
   shell: |
     mv /opt/cni-plugin-flannel*/flannel-amd64 /opt/cni/bin/flannel
-    cp -rf {{ tmp_dir }}/kubernetes/server/bin/{kubelet,kube-proxy} {{ k8s_work_dir }}/bin
+    cp -rf {{ tmp_dir }}/kubernetes/server/bin/kubelet {{ k8s_work_dir }}/bin
+    cp -rf {{ tmp_dir }}/kubernetes/server/bin/kube-proxy {{ k8s_work_dir }}/bin
+
 
 - name: 设置flannel可执行权限
   file:
@@ -100,7 +101,11 @@
     iptables -t nat -I POSTROUTING -s {{ node_pod_ip }} ! -d {{ pod_cidr }} -j MASQUERADE
     iptables -t nat -I POSTROUTING ! -s {{ pod_cidr }} -d {{ node_pod_ip }} -j RETURN
     iptables -t nat -I POSTROUTING -s {{ node_pod_ip }} -d {{ pod_cidr }} -j RETURN
-    iptables-save > /etc/sysconfig/iptables
+    {% if ansible_facts['distribution'] == 'CentOS' %}
+      iptables-save > /etc/sysconfig/iptables
+    {% elif ansible_facts['distribution'] == 'Ubuntu' %}
+      netfilter-persistent save
+    {% endif %}
 
 - name: 启动k8s node组件
   systemd:

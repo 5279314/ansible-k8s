@@ -1,0 +1,36 @@
+{# 收集所有定义了ntp_server的主机 #}
+{% set ntp_servers = [] %}
+{% for host in groups['all'] %}
+  {% if hostvars[host].get('ntp_server', '') %}
+    {% set _ = ntp_servers.append(host) %}
+  {% endif %}
+{% endfor %}
+
+{# 根据收集结果生成server配置 #}
+{% if ntp_servers %}
+{% for server in ntp_servers %}
+server {{ server }} iburst
+{% endfor %}
+{% else %}
+server 0.pool.ntp.org iburst
+server 1.pool.ntp.org iburst
+{% endif %}
+
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+
+{# 处理vip地址，保留前三位，第四位设为0 #}
+{% if vip is defined and vip %}
+  {% set vip_parts = vip.split('.') %}
+  {% if vip_parts | length >= 3 %}
+    {% set network_address = vip_parts[0] + '.' + vip_parts[1] + '.' + vip_parts[2] + '.0' %}
+  {% else %}
+    {% set network_address = '127.0.0.0' %}
+  {% endif %}
+{% else %}
+  {% set network_address = '127.0.0.0' %}
+{% endif %}
+
+allow {{ network_address }}/24
+logdir /var/log/chrony

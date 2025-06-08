@@ -27,9 +27,12 @@
     - "{{ software_dir }}/kubernetes-*.tar.gz"
 
 - name: 移动k8s master二进制文件
-  shell: >
-    cp -rf {{ tmp_dir }}/kubernetes/server/bin/{kube-apiserver,kube-controller-manager,kube-scheduler} {{ k8s_work_dir }}/bin &&
+  shell: |
+    for bin in kube-apiserver kube-controller-manager kube-scheduler; do
+      cp -rf {{ tmp_dir }}/kubernetes/server/bin/$bin {{ k8s_work_dir }}/bin
+    done &&
     cp -rf {{ tmp_dir }}/kubernetes/server/bin/kubectl /usr/bin
+
 
 - name: 分发k8s证书
   copy:
@@ -135,7 +138,7 @@
 
 - name: kubernetes自动补全命令
   lineinfile:
-    path: /etc/bashrc
+    path: "{{'/etc/bashrc' if ansible_facts['distribution'] == 'CentOS' else '/etc/bash.bashrc' }}"
     regexp: 'kubectl completion'
     line: "source <(kubectl completion bash)"
     state: present

@@ -1,5 +1,5 @@
 - name: 0.初始化
-  gather_facts: false
+  gather_facts: true
   hosts: all
   roles:
     - common
@@ -23,13 +23,13 @@
     -  etcd
   tags: etcd
 - name: 4.部署K8S Master
-  gather_facts: false
+  gather_facts: true
   hosts: master
   roles:
     - master
   tags: master
 - name: 5.部署K8S Node
-  gather_facts: false
+  gather_facts: true
   hosts: k8s
   roles:
     - node

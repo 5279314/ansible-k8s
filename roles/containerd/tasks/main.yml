@@ -60,9 +60,11 @@
         dest: "{{ tmp_dir }}"
 
     - name: 更新 runC 依赖
-      command: rpm -Uvh {{ tmp_dir }}/libseccomp-2.5.1-1.el8.x86_64.rpm
+      shell: |
+        if [ -f /etc/redhat-release ]; then
+          rpm -Uvh {{ tmp_dir }}/libseccomp-2.5.1-1.el8.x86_64.rpm
+        fi
       args:
         warn: false
 
   when: "'NoFound' in containerd_svc.stdout"
-

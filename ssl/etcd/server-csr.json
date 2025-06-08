@@ -1,0 +1,22 @@
+{
+    "CN": "etcd",
+    "hosts": [
+                    "10.1.1.210",
+                          "10.1.1.220",
+                          "10.1.1.230",
+                          "etcd1.local",
+                          "etcd2.local",
+                          "etcd3.local"
+              ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "CN",
+            "L": "BeiJing",
+            "ST": "BeiJing"
+        }
+    ]
+}

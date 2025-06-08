@@ -1,6 +1,6 @@
 # 需要设置所有主机名添加node_domain
 [master]
-10.1.1.100 node_name=k8s-master node_domain=k8s-master.local
+10.1.1.100 node_name=k8s-master node_domain=k8s-master.local  ntp_server=true # 设置本机为NTP服务器
 #10.1.1.110 node_name=k8s-master2 node_domain=k8s-master2.local
 
 [node]

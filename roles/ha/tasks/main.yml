@@ -5,7 +5,7 @@
     mode: '0755'
 
 - name: 安装keepalived及相关依赖
-  yum:
+  package:
     name: keepalived
     state: present
 
